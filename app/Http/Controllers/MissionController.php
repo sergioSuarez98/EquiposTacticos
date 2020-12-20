@@ -7,44 +7,53 @@ use App\Models\Mission;
 use App\Models\Soldier;
 class MissionController extends Controller
 {
-    public function createMission(Request $request)
-    {
+    /**
+     * Función que crea una mision y la añade a la base de datos.
+     Los datos de la mision se pasan mediante el data.
+     */
+     public function createMission(Request $request)
+     {
 
-    	$response="";
+       $response="";
 
 
     	// Leer el contenido de la petición
-    	$data = $request->getContent();
+       $data = $request->getContent();
 
     	// Decodificar el json
-    	$data = json_decode($data);
+       $data = json_decode($data);
 
     	// Si hay un json, crear el libro
-    	if($data) {
-    		$mission = new Mission();
+       if($data) {
+          $mission = new Mission();
 
     		//TAREA: Validar los datos antes de guardar
 
-    		$mission->descripcion = $data->descripcion;
-            $mission->prioridad= $data->prioridad;
-			$mission->fecha_registro = $data->fecha_registro;
-			if(isset($data->estado)){
-				$mission->estado= $data->estado;
-		   }
-    		try{
-    			$mission->save();
-    			$response="OK";
-    		} catch(\Exception $e){
-    			$response=$e->getMessage();
-    		}
-    		
-    	}
+          $mission->descripcion = $data->descripcion;
+          $mission->prioridad= $data->prioridad;
+          $mission->fecha_registro = $data->fecha_registro;
+          if(isset($data->estado)){
+            $mission->estado= $data->estado;
+        }
+        try{
+         $mission->save();
+         $response="OK";
+     } catch(\Exception $e){
+         $response=$e->getMessage();
+     }
+     
+ }
 
-    	return response($response);
+ return response($response);
 
-    }
+}
+
+    /**
+     * Funcion que sirve para editar los datos de las misones.
+     La mision que se quiera editar se selecciona por parametro.
+     */
      public function updateMission(Request $request, $id) 
-    {
+     {
         $response="";
 
         //Buscar el libro por id
@@ -66,7 +75,7 @@ class MissionController extends Controller
                 $mission->descripcion = (isset($data->descripcion) ? $data->descripcion : $soldier->descripcion);
                 $mission->prioridad = (isset($data->prioridad) ? $data->prioridad : $soldier->prioridad);
                 $mission->estado= (isset($data->estado) ? $data->estado : $soldier->estado);
-               
+                
                 try{
                     $mission->save();
                     $response="OK";
@@ -77,84 +86,94 @@ class MissionController extends Controller
                 $response = "No hay mision";
             }
 
-                   
+            
             
         }
 
         return response()->json($response);
     }
+
+    /**
+     * Imprime la lista de misiones existentes
+     */
     public function viewAllMissions(){      
 
-	   	    $response = "";
-	        $mission = Mission::orderBy('prioridad', 'ASC')->get();
-	        $response= [];
-        
-	       if($mission){
-           foreach ($mission as $mission) {
+       $response = "";
+       $mission = Mission::orderBy('prioridad', 'ASC')->get();
+       $response= [];
+       
+       if($mission){
+         foreach ($mission as $mission) {
 
-				$response []= [
+            $response []= [
                 "codigo" => $mission->id,
                 "descripcion" => $mission->descripcion,
                 "fecha" => $mission->fecha_registro,
                 "prioridad" => $mission->prioridad,
                 "estado" => $mission->estado
-            	];
-			}
+            ];
+        }
 
-          }  else{
-          	$response="No valido";
+    }  else{
+     $response="No valido";
+ }
+ return response()->json($response);
+
+}
+
+    /**
+     * funcion que devuelve los datos de una mision, el equipo que la realiza, los datos de su lider, y
+     los soldados que estan en el equipo.
+
+     Se selecciona la mision por parametro.
+     */
+     public function viewMissionDetails($id){      
+
+       $response="";
+
+       
+       $mission = Mission::find($id);
+       
+
+       if($mission){
+           $soldier = $mission->soldier;
+           $response = [
+            "codigo" => $mission->id,
+            "descripcion" => $mission->descripcion,
+            "fecha" => $mission->fecha_registro,
+            "prioridad" => $mission->prioridad,
+            "estado" => $mission->estado
+        ];
+
+        if($mission->teamOne){
+           
+          $response["codigo_equipo"] =$mission->teamOne->id;
+          $response["nombre_equipo"] =$mission->teamOne->nombre;
+          
+          if($mission->teamOne->soldier_id){
+
+              $id = $mission->teamOne->soldier_id;
+              $soldiere = Soldier::find($id);
+              $response["codigo_lider"] =$soldiere->id;
+              $response['apellido_lider'] =$soldiere->nombre;
+              $response['numero_placa'] =$soldiere->placa;
+              $response['rango'] =$soldiere->rango;
+              
           }
-		return response()->json($response);
-
-	}
-
-	public function viewMissionDetails($id){      
-
-	   	   	$response="";
-
-	    	
-        	$mission = Mission::find($id);
-        	
-
-	       if($mission){
-           	 $soldier = $mission->soldier;
-           		$response = [
-                "codigo" => $mission->id,
-                "descripcion" => $mission->descripcion,
-                "fecha" => $mission->fecha_registro,
-                "prioridad" => $mission->prioridad,
-                "estado" => $mission->estado
-            	];
-
-            	if($mission->teamOne){
-            	
-            		$response["codigo_equipo"] =$mission->teamOne->id;
-            		$response["nombre_equipo"] =$mission->teamOne->nombre;
-            		
-					if($mission->teamOne->soldier_id){
-
-						$id = $mission->teamOne->soldier_id;
-						$soldiere = Soldier::find($id);
-					    $response["codigo_lider"] =$soldiere->id;
-					    $response['apellido_lider'] =$soldiere->nombre;
-					    $response['numero_placa'] =$soldiere->placa;
-						$response['rango'] =$soldiere->rango;
-					
-					}
-            	}
-            	for ($i=0; $i <count($mission->soldier) ; $i++) { 
-                $response[$i]["soldier_id"] = $soldier[$i]->id;
-                $response[$i]["placa"] = $soldier[$i]->placa;
-                $response[$i]["rango"] = $soldier[$i]->rango;
-                $response[$i]["apellido"] = $soldier[$i]->apellido;
-            	}
-            
+      }
+      for ($i=0; $i <count($mission->soldier) ; $i++) { 
+        $response[$i]["soldier_id"] = $soldier[$i]->id;
+        $response[$i]["placa"] = $soldier[$i]->placa;
+        $response[$i]["rango"] = $soldier[$i]->rango;
+        $response[$i]["apellido"] = $soldier[$i]->apellido;
+    }
+    
 
 
-          }  else{
-          	$response="Mision no encontrada";
-          }
-		return response()->json($response);
-		}
+}  else{
+ $response="Mision no encontrada";
+}
+return response()->json($response);
+}
 
 }
