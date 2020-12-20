@@ -8,24 +8,15 @@ use App\Models\Soldier;
 use App\Models\Team;
 
 class SoldierController extends Controller
-{
-     public function createSoldier(Request $request)
+{   
+
+    /**
+     * Función que se encarga de crear un solado y añadirlo a la base de datos utilizando la ruta adecuada
+     */
+    public function createSoldier(Request $request)
     {
 
     	$response="";
-
-    	   //Para crear el primer Json de referencia
-        
-       /* $json = [
-            "nombre" => 'Sergio',
-            'apellido' => 'Suarez',
-            'fecha_nacimiento' => '1998-02-01',
-            'fecha_incorporacion' => '2017-02-01',
-            'placa' => '675219a',
-            'rango' => 'soldado',
-            'estado' => 'activo'
-        ];
-            echo json_encode($json);*/
 
 
     	// Leer el contenido de la petición
@@ -34,11 +25,11 @@ class SoldierController extends Controller
     	// Decodificar el json
     	$data = json_decode($data);
 
-    	// Si hay un json, crear el libro
+    	// Si hay un json, crear el soldado
     	if($data) {
     		$soldier = new Soldier();
 
-    		//TAREA: Validar los datos antes de guardar
+    		//Validar los datos antes de guardar
 
     		$soldier->nombre = $data->nombre;
     		$soldier->apellido = $data->apellido;
@@ -61,9 +52,12 @@ class SoldierController extends Controller
 
     }
 
-    //cambiar todos los datos del soldado, excepto estado
-    public function updateSoldier(Request $request, $id) 
-    {
+    /**
+     * Función que sirve para editar todos los datos de un soldado excepto su estado.
+     El soladado se selecciona pasandole su id mediante parametro.
+     */
+     public function updateSoldier(Request $request, $id) 
+     {
         $response="";
 
         //Buscar el libro por id
@@ -98,16 +92,20 @@ class SoldierController extends Controller
                 $response = "No book";
             }
 
-                   
+            
             
         }
 
         return response()->json($response);
     }
 
-    //cambiar el estado del soldado
-    public function updateEstado(Request $request, $id) 
-    {
+
+    /**
+     * Función que sirve para editar el estado de un soldado.
+     El soladado se selecciona pasandole su id mediante parametro.
+     */
+     public function updateEstado(Request $request, $id) 
+     {
         $response="";
 
         //Buscar el libro por id
@@ -146,42 +144,50 @@ class SoldierController extends Controller
         return response()->json($response);
     }
 
-  
-   public function viewAll(){      
+  /**
+   *Funcion que muestra la lista de soldados y la información de su equipo 
+   */
+  public function viewAll(){      
 
-   	    $response = "";
-        $soldiers = Soldier::all();
-        $response= [];
-        
+    $response = "";
+    $soldiers = Soldier::all();
+    $response= [];
+    
 
-           for ($i=0; $i <count($soldiers) ; $i++) { 
+    for ($i=0; $i <count($soldiers) ; $i++) { 
 
-            $response[$i] = [
-                "nombre" => $soldiers[$i]->nombre,
-                "apellido" => $soldiers[$i]->apellido,
-                "rango" => $soldiers[$i]->rango,
-                "numero_placa" => $soldiers[$i]->placa
-            ];
+        $response[$i] = [
+            "nombre" => $soldiers[$i]->nombre,
+            "apellido" => $soldiers[$i]->apellido,
+            "rango" => $soldiers[$i]->rango,
+            "numero_placa" => $soldiers[$i]->placa
+        ];
 
-            if($soldiers[$i]->team_id){
+        if($soldiers[$i]->team_id){
 
-                $response[$i]['team_id'] = $soldiers[$i]->team->id;
-                $response[$i]['team_name'] = $soldiers[$i]->team->nombre;
-            }else{
-                $response[$i]['team_id'] = "Sin equipo";
-                $response[$i]['team_name'] = "Sin equipo";
-            }
+            $response[$i]['team_id'] = $soldiers[$i]->team->id;
+            $response[$i]['team_name'] = $soldiers[$i]->team->nombre;
+        }else{
+            $response[$i]['team_id'] = "Sin equipo";
+            $response[$i]['team_name'] = "Sin equipo";
         }
-		return response()->json($response);
+    }
+    return response()->json($response);
 
-	}
-    public function details($soldier_id){
+}
+
+    /**
+     * Funcion que muestra la informacion de un soldado en concreto. 
+     Devuelve la infrmacion del soldado, su equipo, y el lider de su quipo
+     El soldado se selecciona pasando su id por parametro
+     */
+     public function details($soldier_id){
 
         $response = "";
         $soldier = Soldier::find($soldier_id);
         //creo un lider, que no es mas que un soldado normal. Lo que hace especial a este soldado es que es el soldado cuyo id es el del lider del equipo
         if($soldier->team&&$soldier->team->soldier_id)
-        $leader = Soldier::find($soldier->team->soldier_id);
+            $leader = Soldier::find($soldier->team->soldier_id);
         if($soldier){
 
             $response = [
@@ -195,29 +201,32 @@ class SoldierController extends Controller
                 "estado" => $soldier->estado
             ];
 
-                if($soldier->team_id){
-                    
-                    $response['team_id'] = $soldier->team->id;
-                    $response['team_nombre'] = $soldier->team->nombre;
-                }else{
-                    $response['team'] = "Sin equipo";
-                }
-               
-                if($soldier->team_id && $soldier->team->soldier_id){
-                    
-                    $response['leader_id'] = $leader->id;
-                    $response['leader_nombre'] = $leader->nombre;
-                    $response['leader_apellido'] = $leader->apellido;
-                    $response['leader_rango'] = $leader->rango;
-                } else{
-                     $response['leader'] = "Sin lider";
-                }    
-        }
+            if($soldier->team_id){
+                
+                $response['team_id'] = $soldier->team->id;
+                $response['team_nombre'] = $soldier->team->nombre;
+            }else{
+                $response['team'] = "Sin equipo";
+            }
+            
+            if($soldier->team_id && $soldier->team->soldier_id){
+                
+                $response['leader_id'] = $leader->id;
+                $response['leader_nombre'] = $leader->nombre;
+                $response['leader_apellido'] = $leader->apellido;
+                $response['leader_rango'] = $leader->rango;
+            } else{
+               $response['leader'] = "Sin lider";
+           }    
+       }
 
-        return response()->json($response);
-    }
-       
-      public function missionHistoryList($soldier_id){
+       return response()->json($response);
+   }  
+
+     /**
+      * Funcion que muestra el historial de misiones de un soldado. Se selecciona el soldado por parametro
+      */
+     public function missionHistoryList($soldier_id){
 
         //busco el soldado por su id
         $soldier = Soldier::find($soldier_id);
@@ -240,7 +249,7 @@ class SoldierController extends Controller
             $response['fecha_registro'] = $soldier->mission[$i]->fecha_registro;
             $response['estado'] =$soldier->mission[$i]->estado;                
             
-         }
+        }
 
         return response()->json($response);
     }
