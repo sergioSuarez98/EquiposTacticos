@@ -11,21 +11,16 @@ use App\Models\SoldierMission;
 
 class TeamController extends Controller
 {
-      public function createTeam(Request $request)
+
+    /**
+     * Funcion que crea un equipo y lo añade a la base de datos.
+     */
+    public function createTeam(Request $request)
     {
 
     	$response="";
 
     	
-    		//Para crear el primer Json de referencia
-        
-    	/*$json = [
-    		"title" => 'The Lord Of The Rings',
-    		'author' => 'TUPU TAMADRE',
-    		'description' => 'Un hobbit se va de paseo a la tierra media'
-    	];
-
-    	echo json_encode($json);*/
         
     	// Leer el contenido de la petición
     	$data = $request->getContent();
@@ -33,23 +28,13 @@ class TeamController extends Controller
     	// Decodificar el json
     	$data = json_decode($data);
 
-    	// Si hay un json, crear el libro
+    	// Si hay un json,crear equipo
     	if($data) {
     		$team = new Team();
 
     		//Validar los datos antes de guardar
     		$team->nombre = $data->nombre;
-    		//valido s soldier_id esta en el data, ya que puede ser nulo. Igual con mission_id.
-    		/*if(isset($data->soldier_id)){
-
-    			$team->soldier_id = $data->soldier;
-
-    		}
-    		if(isset($data->mission_id)){
-
-    			$team->mission_id= $data->mission_id;
-
-    		}*/
+    		
     		
     		try{
     			$team->save();
@@ -64,15 +49,19 @@ class TeamController extends Controller
 
     }
 
+    /**
+     * Funcion que modifica el nombre de un equipo.
+     Selecciona el equipo por parametro
+     */
      public function updateTeam(Request $request, $id) 
-    {
+     {
         $response="";
 
         //Buscar el libro por id
         $team = Team::find($id);
         
 
-        // Si hay un libro, actualizar el libro
+        
         if($team) {
 
             // Leer el contenido de la petición
@@ -97,40 +86,47 @@ class TeamController extends Controller
                 $response = "No book";
             }
 
-            //TAREA: Validar los datos antes de guardar        
+            
             
         }
 
         return response()->json($response);
     }
-    //borarr un equipo
-    public function deleteTeam(Request $request, $id){
+    /**
+     * Funcion que borra un equipo
+     Selecciona el equipo por parametro
+     */
+     public function deleteTeam(Request $request, $id){
 
-		$response = "";
-		
+      $response = "";
+      
 		//Buscar el equipo por su id
 
-		$team = Team::find($id);
+      $team = Team::find($id);
 
-		if($team){
+      if($team){
 
-			try{
-				$team->delete();
-				$response = "OK";
-			}catch(\Exception $e){
-				$response = $e->getMessage();
-			}
-						
-		}else{
-			$response = "No team";
-		}
+         try{
+            $team->delete();
+            $response = "OK";
+        }catch(\Exception $e){
+            $response = $e->getMessage();
+        }
+        
+    }else{
+     $response = "No team";
+ }
 
-		
-		return response($response);
-	}
+ 
+ return response($response);
+}
 
-    public function addLeader(Request $request,$team_id) 
-    {
+    /**
+     * Funcion que relaciona un soldado con un equipo. Este soldado sera lider.
+     Selecciona el equipo por parametro
+     */
+     public function addLeader(Request $request,$team_id) 
+     {
         $response="";
 
         //Buscar el libro por id
@@ -149,60 +145,67 @@ class TeamController extends Controller
         if($data&&$team&&$soldier) {
 
           
-            	$team->soldier_id = (isset($data->soldier_id) ? $data->soldier_id : $team->soldier_id);
+           $team->soldier_id = (isset($data->soldier_id) ? $data->soldier_id : $team->soldier_id);
 
-                $soldier->team_id = (isset($team_id) ? $team_id : $data->soldier_id);
+           $soldier->team_id = (isset($team_id) ? $team_id : $data->soldier_id);
 
 
-          		try{
+           try{
 
-                    $team->save();
-                    $soldier->save();
-               		$response="OK";
+            $team->save();
+            $soldier->save();
+            $response="OK";
 
-            	}catch(\Exception $e){
+        }catch(\Exception $e){
 
-                    $response=$e->getMessage();
+            $response=$e->getMessage();
 
-               	 }
-     
-        }else{$response = "No soldado";}
+        }
+        
+    }else{$response = "No soldado";}
 
-        return response()->json($response);
-    }
-
-    public function addSoldier(Request $request) 
-    {
-       $response = "";
+    return response()->json($response);
+}
+    /**
+     * Se añade un soldado al equipo.
+     Tanto soldado como el quipo al que se le relacciona
+     se especifican mediante $data
+     */
+     public function addSoldier(Request $request) 
+     {
+         $response = "";
 		//Leer el contenido de la petición
-		$data = $request->getContent();
+         $data = $request->getContent();
 
 		//Decodificar el json
-		$data = json_decode($data);
-        $soldier = Soldier::find($data->soldier);
+         $data = json_decode($data);
+         $soldier = Soldier::find($data->soldier);
 		//Si hay un json válido, crear el libro
-		if($data&&$soldier&&Team::find($data->team)){
-			
+         if($data&&$soldier&&Team::find($data->team)){
+             
 
 			//TODO: Validar los datos antes de guardar el libro
 
-			$soldier->team_id = $data->team;
-			
-			try{
-				$soldier->save();
-				$response = "OK";
-			}catch(\Exception $e){
-				$response = $e->getMessage();
-			}
+             $soldier->team_id = $data->team;
+             
+             try{
+                $soldier->save();
+                $response = "OK";
+            }catch(\Exception $e){
+                $response = $e->getMessage();
+            }
 
-		}
-		return response($response);
-   
+        }
+        return response($response);
+        
     }
 
-
-    public function asignarMision(Request $request) 
-    {
+    /**
+     * Se le asigna una mision a un equipo.
+     Tanto la mision como el equipo se especifican por data
+     */
+     public function asignarMision(Request $request) 
+     {
         $response = "";
         //Leer el contenido de la petición
         $data = $request->getContent();
@@ -224,50 +227,53 @@ class TeamController extends Controller
                 if($mission){
 
 
-                     foreach ($soldiers as $soldier) {
+                   foreach ($soldiers as $soldier) {
 
                     $soldierMission = new soldierMission();
                     $soldierMission->soldier_id = $soldier['id'];
                     $soldierMission->mission_id = $data->mission; 
                     $soldierMission->save(); 
 
-                    }
+                }
 
-                    $team->mission_id = $data->mission;
-                    $mission->estado = "curso";
+                $team->mission_id = $data->mission;
+                $mission->estado = "curso";
 
-                    try{
-                        $team->save();
-                        $mission->save();
-                      
-                        $response = "OK";
-                    }catch(\Exception $e){
-                        $response = $e->getMessage();
-                    }
-
-
-
-
+                try{
+                    $team->save();
+                    $mission->save();
+                    
+                    $response = "OK";
+                }catch(\Exception $e){
+                    $response = $e->getMessage();
                 }
 
 
 
-            }else{
 
-                $response = "Mision ya asignada";
             }
 
-            
-           
-        }else{
-             $response = "No valido";
-        }
-        return response($response);
-   
-    }
 
-    public function getSoldiers($team_id) 
-    {
+
+        }else{
+
+            $response = "Mision ya asignada";
+        }
+
+        
+        
+    }else{
+       $response = "No valido";
+   }
+   return response($response);
+   
+}
+    /**
+     * Funcion en la que guardo todos los soldados con un cierto team_id.
+     Ese team_id se pasa por parametro.
+     */
+     public function getSoldiers($team_id) 
+     {
         
         $response = [];
         $soldiers = Soldier::all();
@@ -275,58 +281,70 @@ class TeamController extends Controller
         
         foreach ($soldiers as $soldier) {
 
-             if($soldier->team_id === $team_id){
-               $response[] =[
+           if($soldier->team_id === $team_id){
+             $response[] =[
                 "id" => $soldier->id
-               ];
-           }
-       
-        } 
-        return $response;
-   
-    }
-     public function miembrosEquipos($id) 
-    {
-         $response = "";
-        $response = [];
-        $team = Team::find($id);
-        $leader = Soldier::find($team->soldier_id);
-
-        $response[] = [                 
-            "team_id" => $team->id,
-            "team_nombre" => $team->nombre,
-            "leader_id" => $team->soldier_id,
-            "leader_nombre"=> $leader->nombre
-        ];
-        
-
-        
-
-        $soldiers = Soldier::all();
-
-
-        for ($i=0; $i < count($soldiers) ; $i++) { 
-           
-             if($soldiers[$i]->team_id == $id ){
-            
-               $response[$i]["soldiers"] =[
-
-                "soldier_id" => $soldiers[$i]->id,
-                "soldier_name" => $soldiers[$i]->nombre,
-                "soldier_apellido" => $soldiers[$i]->apellido,
-                "soldier_placa" => $soldiers[$i]->placa,
-                "soldier_rango" => $soldiers[$i]->rango
-
-               ];
-            }
+            ];
         }
-
         
-        
-     return $response;
+    } 
+    return $response;
+    
+}
 
+    /**
+     * Función que muestra los la información de un equipo
+     y los soldados que pertenecen a el.
+
+     Se selecciona el equipo pasandole su id por parametro
+     */
+     public function miembrosEquipos($id) 
+     {
+       $response = "";
+       $response = [];
+       $team = Team::find($id);
+       $leader = Soldier::find($team->soldier_id);
+
+       $response[] = [                 
+        "team_id" => $team->id,
+        "team_nombre" => $team->nombre,
+        "leader_id" => $team->soldier_id,
+        "leader_nombre"=> $leader->nombre
+    ];
+    
+
+    
+
+    $soldiers = Soldier::all();
+
+
+    for ($i=0; $i < count($soldiers) ; $i++) { 
+     
+       if($soldiers[$i]->team_id == $id ){
+        
+         $response[$i]["soldiers"] =[
+
+            "soldier_id" => $soldiers[$i]->id,
+            "soldier_name" => $soldiers[$i]->nombre,
+            "soldier_apellido" => $soldiers[$i]->apellido,
+            "soldier_placa" => $soldiers[$i]->placa,
+            "soldier_rango" => $soldiers[$i]->rango
+
+        ];
     }
-    public function eliminarSoldado(Request $request){
+}
+
+
+
+return $response;
+
+}  
+
+    /**
+     * Elimina un soldado de un equipo.
+     Se especifica medianter el data.
+     */
+     public function eliminarSoldado(Request $request){
 
         $response = "";
 
@@ -353,6 +371,9 @@ class TeamController extends Controller
         return response($response);
     }
 
+    /**
+     * Modifica el lider del equipo
+     */
     public function newLeader(Request $request){
 
         $response = "";
