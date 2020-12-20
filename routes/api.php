@@ -19,6 +19,7 @@ use App\Http\Controllers\MissionController;
 |
 */
 
+//Rutas cuyas funciones estan en SoldierController
 Route::post('/soldiers/create', [SoldierController::class, 'createSoldier']);
 Route::post('/soldiers/update/{id}', [SoldierController::class, 'updateSoldier']);
 Route::post('/soldiers/update/estado/{id}', [SoldierController::class, 'updateEstado']);
@@ -27,7 +28,7 @@ Route::get('/soldiers/show/{id}', [SoldierController::class, 'details']);
 Route::get('/soldiers/show/missions/{id}', [SoldierController::class, 'missionHistoryList']);
 
 
-
+//Rutas cuyas funciones estan en TeamldierController
 Route::post('/teams/create', [TeamController::class, 'createTeam']);
 Route::post('/teams/update/{id}', [TeamController::class, 'updateTeam']);
 Route::post('/teams/delete/{id}', [TeamController::class, 'deleteTeam']);
@@ -38,7 +39,7 @@ Route::get('/teams/showMembers/{id}', [TeamController::class, 'miembrosEquipos']
 Route::post('/teams/quit/soldier', [TeamController::class, 'eliminarSoldado']);
 Route::post('/teams/new/leader', [TeamController::class, 'newLeader']);
 
-
+//Rutas cuyas funciones estan en MissionController
 Route::post('/missions/create', [MissionController::class, 'createMission']);
 Route::post('/missions/update/{id}', [MissionController::class, 'updateMission']);
 Route::get('/missions/list', [MissionController::class, 'viewAllMissions']);
